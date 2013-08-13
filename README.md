@@ -1,7 +1,7 @@
 UIColor-HNExtensions
 ====================
 
-A grab-bag of different UIColor related extensions. Feel free to contact me on [Twitter @henrinormak](http://twitter.com/henrinormak "@henrinormak on Twitter") 
+A grab-bag of different UIColor related extensions. Feel free to contact me on Twitter [@henrinormak](http://twitter.com/henrinormak "@henrinormak on Twitter") 
 
 Components
 ----------
