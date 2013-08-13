@@ -210,13 +210,13 @@ BlendingBlock BlendingBlockForMode(UIColorBlendingMode blendMode)
 }
 
 - (NSArray *)analogousColors {
-    return UIColorAdjacentColorsToColor(self);
+    return @[[self copy], UIColorAdjacentColorsToColor(self)];
 }
 
 - (NSArray *)splitComplementaryColors {
     UIColor *complementary = [self complementaryColor];
     if (complementary)
-        return UIColorAdjacentColorsToColor(complementary);
+        return @[[self copy], UIColorAdjacentColorsToColor(complementary)];
     
     // Error, likely due to colour space issues
     return nil;
@@ -228,17 +228,17 @@ BlendingBlock BlendingBlockForMode(UIColorBlendingMode blendMode)
     if ([self getHue:&hue saturation:&saturation brightness:&brightness alpha:&alpha]) {
         CGFloat leftHue = hue - 0.33333f < 0.f ? 1.f + (hue - 0.33333f) : hue - 0.33333f;
         CGFloat rightHue = fmodf(hue + 0.33333f, 1.f);
-        
+                
         UIColor *color1 = [UIColor colorWithHue:leftHue saturation:saturation brightness:brightness alpha:alpha];
         UIColor *color2 = [UIColor colorWithHue:rightHue saturation:saturation brightness:brightness alpha:alpha];
         
-        return @[color1, color2];
+        return @[[self copy], color1, color2];
     } else if ([self getWhite:&brightness alpha:&alpha]) {
         // With black/white and gray tones the analogous scheme is just the same color
         UIColor *color1 = [UIColor colorWithCGColor:self.CGColor];
         UIColor *color2 = [UIColor colorWithCGColor:self.CGColor];
         
-        return @[color1, color2];
+        return @[[self copy], color1, color2];
     }
     
     return nil;
@@ -255,7 +255,7 @@ BlendingBlock BlendingBlockForMode(UIColorBlendingMode blendMode)
             
             if ([self getHue:&hue saturation:&saturation brightness:&brightness alpha:&alpha]) {
                 UIColor *right = [UIColor colorWithHue:fmodf(hue + 0.16666f, 1.f) saturation:saturation brightness:brightness alpha:alpha];
-                return @[left, complementary, right];
+                return @[[self copy], left, complementary, right];
             }
         }
     }
@@ -274,7 +274,7 @@ BlendingBlock BlendingBlockForMode(UIColorBlendingMode blendMode)
             
             if ([self getHue:&hue saturation:&saturation brightness:&brightness alpha:&alpha]) {
                 UIColor *right = [UIColor colorWithHue:fmodf(hue + 0.25f, 1.f) saturation:saturation brightness:brightness alpha:alpha];
-                return @[left, complementary, right];
+                return @[[self copy], left, complementary, right];
             }
         }
     }

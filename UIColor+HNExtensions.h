@@ -46,12 +46,12 @@
 // Complementary color
 - (UIColor *)complementaryColor;
 
-// Following methods return an array of 2 UIColor objects
+// Following methods return an array of 3 UIColor objects (first of which is the receiver)
 - (NSArray *)analogousColors;
 - (NSArray *)splitComplementaryColors;
 - (NSArray *)triadicColors;
 
-// Following methods return an array of 3 UIColor objects
+// Following methods return an array of 4 UIColor objects (first of which is the receiver)
 - (NSArray *)tetradicColors;
 - (NSArray *)squareColors;
 
