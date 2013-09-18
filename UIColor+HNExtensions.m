@@ -58,7 +58,7 @@ NSArray * UIColorAdjacentColorsToColor(UIColor *color) {
     return nil;
 }
 
-typedef CGFloat (^BlendingBlock)(CGFloat destination, CGFloat source);
+typedef float (^BlendingBlock)(float destination, float source);
 BlendingBlock BlendingBlockForMode(UIColorBlendingMode blendMode);
 BlendingBlock BlendingBlockForMode(UIColorBlendingMode blendMode)
 {
@@ -66,42 +66,42 @@ BlendingBlock BlendingBlockForMode(UIColorBlendingMode blendMode)
     BlendingBlock resultBlock = NULL;
     switch (blendMode) {
         case kColorBlendingModeNormal:
-            resultBlock = ^(CGFloat destination, CGFloat source){ return source; };
+            resultBlock = ^(float destination, float source){ return source; };
             break;
         case kColorBlendingModeMultiply:
-            resultBlock = ^(CGFloat destination, CGFloat source){ return destination * source; };
+            resultBlock = ^(float destination, float source){ return destination * source; };
             break;
         case kColorBlendingModeScreen:
-            resultBlock = ^(CGFloat destination, CGFloat source){ return destination + source - (destination * source); };
+            resultBlock = ^(float destination, float source){ return destination + source - (destination * source); };
             break;
         case kColorBlendingModeOverlay:
-            resultBlock = ^(CGFloat destination, CGFloat source){ return destination <= 0.5f ? source * (destination / 0.5f) :
+            resultBlock = ^(float destination, float source){ return destination <= 0.5f ? source * (destination / 0.5f) :
                 source * ((source - destination) / 0.5f) + (destination - (source - destination)); };
             break;
         case kColorBlendingModeDarken:
-            resultBlock = ^(CGFloat destination, CGFloat source){ return MIN(source, destination); };
+            resultBlock = ^(float destination, float source){ return MIN(source, destination); };
             break;
         case kColorBlendingModeLighten:
-            resultBlock = ^(CGFloat destination, CGFloat source){ return MAX(source, destination); };
+            resultBlock = ^(float destination, float source){ return MAX(source, destination); };
             break;
         case kColorBlendingModeColorDodge:
-            resultBlock = ^(CGFloat destination, CGFloat source){ return source == 1.f ? 0.f : destination / (1.f - source); };
+            resultBlock = ^(float destination, float source){ return source == 1.f ? 0.f : destination / (1.f - source); };
             break;
         case kColorBlendingModeColorBurn:
-            resultBlock = ^(CGFloat destination, CGFloat source){ return source == 0.f ? 1.f : 1.0f - (1.f - destination) / source; };
+            resultBlock = ^(float destination, float source){ return source == 0.f ? 1.f : 1.0f - (1.f - destination) / source; };
             break;
         case kColorBlendingModeHardLight:
-            resultBlock = ^(CGFloat destination, CGFloat source){ return source >= 0.5f ? 2.f * destination * source : 1.f - 2.f * (1.f - destination) * (1.f - source); };
+            resultBlock = ^(float destination, float source){ return source >= 0.5f ? 2.f * destination * source : 1.f - 2.f * (1.f - destination) * (1.f - source); };
             break;
         case kColorBlendingModeSoftLight:
-            resultBlock = ^(CGFloat destination, CGFloat source){
+            resultBlock = ^(float destination, float source){
                 return (1.f - destination) * (destination * source) + destination * (destination + source - (destination * source)); };
             break;
         case kColorBlendingModeDifference:
-            resultBlock = ^(CGFloat destination, CGFloat source){ return fabsf(destination - source); };
+            resultBlock = ^(float destination, float source){ return fabsf(destination - source); };
             break;
         case kColorBlendingModeExclusion:
-            resultBlock = ^(CGFloat destination, CGFloat source){ return 0.5f - 2.f * (destination - 0.5f) * (source - 0.5f); };
+            resultBlock = ^(float destination, float source){ return 0.5f - 2.f * (destination - 0.5f) * (source - 0.5f); };
         default:
             break;
     }
@@ -142,6 +142,24 @@ BlendingBlock BlendingBlockForMode(UIColorBlendingMode blendMode)
     return blue;
 }
 
+- (CGFloat)getSaturation {
+    CGFloat saturation = 0.f;
+    [self getHue:NULL saturation:&saturation brightness:NULL alpha:NULL];
+    return saturation;
+}
+
+- (CGFloat)getBrightness {
+    CGFloat brightness = 0.f;
+    [self getHue:NULL saturation:NULL brightness:&brightness alpha:NULL];
+    return brightness;
+}
+
+- (CGFloat)getHue {
+    CGFloat hue = 0.f;
+    [self getHue:&hue saturation:NULL brightness:NULL alpha:NULL];
+    return hue;
+}
+
 - (CGFloat)getLuminance {
     CGFloat r, g, b;
     
@@ -169,6 +187,10 @@ BlendingBlock BlendingBlockForMode(UIColorBlendingMode blendMode)
         b = powf(((b + 0.055f) / 1.055f), 2.4f);
     
     return 0.2126f * r + 0.7152f * g + 0.0722f * b;
+}
+
+- (BOOL)isPatternBased {
+    return CGColorGetPattern(self.CGColor) != nil;
 }
 
 - (UIColor *)colorWithSaturation:(CGFloat)saturation {
@@ -307,45 +329,32 @@ BlendingBlock BlendingBlockForMode(UIColorBlendingMode blendMode)
 #pragma mark Gradients
 
 + (UIColor *)colorAtPosition:(CGFloat)position fromColor:(UIColor *)fromColor toColor:(UIColor *)toColor {
-    CGFloat fromHue, fromSaturation, fromBrightness, fromAlpha;
-    CGFloat toHue, toSaturation, toBrightness, toAlpha;
+    // Components
+    CGFloat fromRed, fromGreen, fromBlue, fromAlpha;
+    CGFloat toRed, toGreen, toBlue, toAlpha;
     
     // Make sure the position is valid
     position = CLAMP(position, 0.f, 1.f);
     
-    BOOL grayscale = NO;
-    if ((grayscale = ![fromColor getHue:&fromHue saturation:&fromSaturation brightness:&fromBrightness alpha:&fromAlpha])) {
-        fromSaturation = 0.f;
-        fromHue = 0.f;
-        [fromColor getWhite:&fromBrightness alpha:&fromAlpha];
+    if (![fromColor getRed:&fromRed green:&fromGreen blue:&fromBlue alpha:&fromAlpha]) {
+        CGFloat white;
+        [fromColor getWhite:&white alpha:&fromAlpha];
+        fromRed = fromGreen = fromBlue = white;
     }
     
-    if (![toColor getHue:&toHue saturation:&toSaturation brightness:&toBrightness alpha:&toAlpha]) {
-        toHue = fromHue;    // In case the first colour was not grayscale (gives smoother gradient)
-        toSaturation = 0.f;
-        [toColor getWhite:&toBrightness alpha:&toAlpha];
-    } else if (grayscale) {
-        fromHue = toHue;
+    if (![toColor getRed:&toRed green:&toGreen blue:&toBlue alpha:&toAlpha]) {
+        CGFloat white;
+        [toColor getWhite:&white alpha:&toAlpha];
+        toRed = toGreen = toBlue = white;
     }
-    
-    // Adjust the hues to make sure the shortest path is used
-    if (toHue - fromHue > (fromHue + 1.f) - toHue) {
-        // Shorter to go the other way
-        // i.e not from 0.0 - 1.0, but 1.0 - 0.0
-        fromHue += 1.f;
-    } else if (fromHue - toHue > (toHue + 1.f) - fromHue) {
-        toHue += 1.f;
-    }
-    
+        
     // Calculate the interpolated value at the given point
     CGFloat inversePosition = 1.0 - position;
-    CGFloat hue = fmodf((fromHue * inversePosition) + (toHue * position), 1.0);
-    CGFloat saturation = (fromSaturation * inversePosition) + (toSaturation * position);
-    CGFloat brightness = (fromBrightness * inversePosition) + (toBrightness * position);
+    CGFloat red = (fromRed * inversePosition) + (toRed * position);
+    CGFloat green = (fromGreen * inversePosition) + (toGreen * position);
+    CGFloat blue = (fromBlue * inversePosition) + (toBlue * position);
     CGFloat alpha = (fromAlpha * inversePosition) + (toAlpha * position);
-        
-    // We don't have to worry about the values being normalised, as the input was already correct
-    return [UIColor colorWithHue:hue saturation:saturation brightness:brightness alpha:alpha];
+    return [UIColor colorWithRed:red green:green blue:blue alpha:alpha];
 }
 
 + (UIColor *)colorAtPosition:(CGFloat)position withinColors:(NSArray *)colors {
@@ -386,7 +395,7 @@ static NSUInteger const ColorAlphaChannel = 3;
     CGColorSpaceModel sourceModel = CGColorSpaceGetModel(CGColorGetColorSpace([sourceColor CGColor]));
     if ((destinationModel != kCGColorSpaceModelMonochrome && destinationModel != kCGColorSpaceModelRGB) ||
         (sourceModel != kCGColorSpaceModelMonochrome && sourceModel != kCGColorSpaceModelRGB)) {
-        @throw [NSException exceptionWithName:NSInvalidArgumentException reason:@"Both colors have to be in either RGB or monochrome color space" userInfo:nil];
+        [[NSException exceptionWithName:NSInvalidArgumentException reason:@"Both colors have to be in either RGB or monochrome color space" userInfo:nil] raise];
         return nil;
     }
     
@@ -414,7 +423,7 @@ static NSUInteger const ColorAlphaChannel = 3;
     CGFloat destinationAlphaComplement = 1.f - destination[ColorAlphaChannel];
     
     BlendingBlock formulaBlock = BlendingBlockForMode(mode);
-    for (int i = 0; i < 3; i++)
+    for (NSInteger i = 0; i < 3; i++)
         result[i] = alphaComplement * destination[i] + alpha * (destinationAlphaComplement * source[i] + destination[ColorAlphaChannel] * formulaBlock(destination[i], source[i]));
     
     // Create the color from the components
@@ -423,9 +432,9 @@ static NSUInteger const ColorAlphaChannel = 3;
 
 + (UIColor *)randomColor {
     // Generate three random values
-    int r = arc4random() % 256;
-    int g = arc4random() % 256;
-    int b = arc4random() % 256;
+    NSInteger r = arc4random() % 256;
+    NSInteger g = arc4random() % 256;
+    NSInteger b = arc4random() % 256;
     
     // Create the color and return it
     return [UIColor colorWithRed:r / 255.f green:g / 255.f blue:b / 255.f alpha:1.f];
@@ -450,7 +459,7 @@ static NSUInteger const ColorAlphaChannel = 3;
     }
     
     // Check if size is enough
-    int length = [string length];
+    NSUInteger length = [string length];
     switch (length) {
         case 1:
             // The pattern is easy to form
@@ -477,15 +486,43 @@ static NSUInteger const ColorAlphaChannel = 3;
     }
     
     // Storage for all the values
-    unsigned int color;
+    unsigned color;
     
     // Now we can proceed to calculate the values, start by creating a range of the string to look at
     [[NSScanner scannerWithString:string] scanHexInt:&color]; // Grabs color value
     
-    return [UIColor colorWithRed:(float)(((color >> 16) & 0xFF) / 255.f)
-                           green:(float)(((color >> 8) & 0xFF) / 255.f)
-                            blue:(float)((color & 0xFF) / 255.f)
+    return [UIColor colorWithRed:(CGFloat)(((color >> 16) & 0xFF) / 255.f)
+                           green:(CGFloat)(((color >> 8) & 0xFF) / 255.f)
+                            blue:(CGFloat)((color & 0xFF) / 255.f)
                            alpha:1.f];
+}
+
+- (BOOL)isEqualToColor:(UIColor *)otherColor {
+    if (![otherColor isKindOfClass:[UIColor class]])
+        return NO;
+    
+    if (self == otherColor)
+        return YES;
+    
+    CGColorSpaceRef colorSpaceRGB = CGColorSpaceCreateDeviceRGB();
+    
+    UIColor *(^convertColorToRGBSpace)(UIColor*) = ^(UIColor *color) {
+        if (CGColorSpaceGetModel(CGColorGetColorSpace(color.CGColor)) == kCGColorSpaceModelMonochrome) {
+            const CGFloat *oldComponents = CGColorGetComponents(color.CGColor);
+            CGFloat components[4] = {oldComponents[0], oldComponents[0], oldComponents[0], oldComponents[1]};
+            CGColorRef colorRef = CGColorCreate(colorSpaceRGB, components);
+            UIColor *color = [UIColor colorWithCGColor:colorRef];
+            CGColorRelease(colorRef);
+            return color;
+        } else
+            return color;
+    };
+    
+    UIColor *selfColor = convertColorToRGBSpace(self);
+    otherColor = convertColorToRGBSpace(otherColor);
+    CGColorSpaceRelease(colorSpaceRGB);
+    
+    return [selfColor isEqual:otherColor];
 }
 
 @end

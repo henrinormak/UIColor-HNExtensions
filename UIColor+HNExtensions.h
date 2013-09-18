@@ -36,6 +36,13 @@
 - (CGFloat)getGreen;
 - (CGFloat)getBlue;
 
+- (CGFloat)getSaturation;
+- (CGFloat)getBrightness;
+- (CGFloat)getHue;
+
+// YES if this colour was likely created by +colorWithPatternImage:
+- (BOOL)isPatternBased;
+
 // Following methods take value from 0-1 and replace the receiver's corresponding value
 - (UIColor *)colorWithSaturation:(CGFloat)saturation;
 - (UIColor *)colorWithBrightness:(CGFloat)brightness;
@@ -109,5 +116,8 @@ typedef enum {
 
 // Random color generator
 + (UIColor *)randomColor;
+
+// Comparison to another UIColor, converts both to suitable model/space beforehand
+- (BOOL)isEqualToColor:(UIColor *)color;
 
 @end
