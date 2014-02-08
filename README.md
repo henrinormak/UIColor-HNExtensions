@@ -64,12 +64,10 @@ Example:
 
     // Getting the same effect as if you had used a blend mode when filling a colour on top of another colour
     // For example, overlay of white on darker blue produces full blue
-    UIColor *overlayBlue = [[UIColor colorForWebColor:@"0000da"] colorByBlendingWithColor:[UIColor whiteColor] mode:kColorBlendingModeOverlay]
+    UIColor *overlayBlue = [[UIColor colorForHexString:@"0000da"] colorByBlendingWithColor:[UIColor whiteColor] mode:kColorBlendingModeOverlay]
     
 Miscellaneous
 -------------
 
 There are two miscellaneous methods, one for converting a CSS styled HEX string to a colour, like "#FFF" or "FF", also there is a method for getting a totally random colour
 
-
-    
