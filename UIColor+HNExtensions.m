@@ -193,6 +193,34 @@ BlendingBlock BlendingBlockForMode(UIColorBlendingMode blendMode)
     return CGColorGetPattern(self.CGColor) != nil;
 }
 
+- (BOOL)isEqualToColor:(UIColor *)otherColor {
+    if (![otherColor isKindOfClass:[UIColor class]])
+        return NO;
+    
+    if (self == otherColor)
+        return YES;
+    
+    CGColorSpaceRef colorSpaceRGB = CGColorSpaceCreateDeviceRGB();
+    
+    UIColor *(^convertColorToRGBSpace)(UIColor*) = ^(UIColor *color) {
+        if (CGColorSpaceGetModel(CGColorGetColorSpace(color.CGColor)) == kCGColorSpaceModelMonochrome) {
+            const CGFloat *oldComponents = CGColorGetComponents(color.CGColor);
+            CGFloat components[4] = {oldComponents[0], oldComponents[0], oldComponents[0], oldComponents[1]};
+            CGColorRef colorRef = CGColorCreate(colorSpaceRGB, components);
+            UIColor *color = [UIColor colorWithCGColor:colorRef];
+            CGColorRelease(colorRef);
+            return color;
+        } else
+            return color;
+    };
+    
+    UIColor *selfColor = convertColorToRGBSpace(self);
+    otherColor = convertColorToRGBSpace(otherColor);
+    CGColorSpaceRelease(colorSpaceRGB);
+    
+    return [selfColor isEqual:otherColor];
+}
+
 - (UIColor *)colorWithSaturation:(CGFloat)saturation {
     // Convert the color to HSB values
     CGFloat hue;
@@ -211,6 +239,16 @@ BlendingBlock BlendingBlockForMode(UIColorBlendingMode blendMode)
     
     [self getHue:&hue saturation:&saturation brightness:NULL alpha:&alpha];
     return [UIColor colorWithHue:hue saturation:saturation brightness:CLAMP(brightness, 0.f, 1.f) alpha:alpha];
+}
+
+- (UIColor *)colorWithHue:(CGFloat)hue {
+    // Convert the color to HSB values
+    CGFloat brightness;
+    CGFloat saturation;
+    CGFloat alpha;
+    
+    [self getHue:NULL saturation:&saturation brightness:&brightness alpha:&alpha];
+    return [UIColor colorWithHue:CLAMP(hue, 0.f, 1.f) saturation:saturation brightness:brightness alpha:alpha];
 }
 
 #pragma mark -
@@ -440,7 +478,7 @@ static NSUInteger const ColorAlphaChannel = 3;
     return [UIColor colorWithRed:r / 255.f green:g / 255.f blue:b / 255.f alpha:1.f];
 }
 
-+ (UIColor *)colorForWebColor:(NSString *)colorCode {
++ (UIColor *)colorForHexString:(NSString *)colorCode {
     NSMutableString *string = [NSMutableString stringWithString:colorCode];
     [string replaceOccurrencesOfString:@"#" withString:@"" options:0 range:NSMakeRange(0, [string length])];
     
@@ -497,32 +535,21 @@ static NSUInteger const ColorAlphaChannel = 3;
                            alpha:1.f];
 }
 
-- (BOOL)isEqualToColor:(UIColor *)otherColor {
-    if (![otherColor isKindOfClass:[UIColor class]])
-        return NO;
+- (NSString *)hexString {
+    // Grab the components
+    CGFloat red, green, blue, alpha;
+    [self getRed:&red green:&green blue:&blue alpha:&alpha];
     
-    if (self == otherColor)
-        return YES;
+    NSInteger integerRed = red * 255;
+    NSInteger integerGreen = green * 255;
+    NSInteger integerBlue = blue * 255;
+    NSInteger integerAlpha = alpha * 255;
     
-    CGColorSpaceRef colorSpaceRGB = CGColorSpaceCreateDeviceRGB();
+    NSString *value = [NSString stringWithFormat:@"#%lx%lx%lx", (long)integerRed, (long)integerGreen, (long)integerBlue];
+    if (integerAlpha != 255)
+        value = [value stringByAppendingFormat:@"%lx", (long)integerAlpha];
     
-    UIColor *(^convertColorToRGBSpace)(UIColor*) = ^(UIColor *color) {
-        if (CGColorSpaceGetModel(CGColorGetColorSpace(color.CGColor)) == kCGColorSpaceModelMonochrome) {
-            const CGFloat *oldComponents = CGColorGetComponents(color.CGColor);
-            CGFloat components[4] = {oldComponents[0], oldComponents[0], oldComponents[0], oldComponents[1]};
-            CGColorRef colorRef = CGColorCreate(colorSpaceRGB, components);
-            UIColor *color = [UIColor colorWithCGColor:colorRef];
-            CGColorRelease(colorRef);
-            return color;
-        } else
-            return color;
-    };
-    
-    UIColor *selfColor = convertColorToRGBSpace(self);
-    otherColor = convertColorToRGBSpace(otherColor);
-    CGColorSpaceRelease(colorSpaceRGB);
-    
-    return [selfColor isEqual:otherColor];
+    return value;
 }
 
 @end

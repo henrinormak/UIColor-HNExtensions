@@ -32,18 +32,23 @@
 #pragma mark Components
 
 - (CGFloat)getAlpha;
+
 - (CGFloat)getRed;
 - (CGFloat)getGreen;
 - (CGFloat)getBlue;
 
+- (CGFloat)getHue;
 - (CGFloat)getSaturation;
 - (CGFloat)getBrightness;
-- (CGFloat)getHue;
 
 // YES if this colour was likely created by +colorWithPatternImage:
 - (BOOL)isPatternBased;
 
+// Comparison to another UIColor, converts both to suitable model/space beforehand
+- (BOOL)isEqualToColor:(UIColor *)color;
+
 // Following methods take value from 0-1 and replace the receiver's corresponding value
+- (UIColor *)colorWithHue:(CGFloat)hue;
 - (UIColor *)colorWithSaturation:(CGFloat)saturation;
 - (UIColor *)colorWithBrightness:(CGFloat)brightness;
 
@@ -112,12 +117,10 @@ typedef enum {
 // If less than six characters long, will be used as a pattern - "FFA" will result in "FFAFFA" and "FFFA" results in "FFFAFF"
 // Does not take alpha into account (i.e alpha is always set to 100%)
 // Additionally works with the constants used by UIColor, such as "yellow" or "orange" or "clear"
-+ (UIColor *)colorForWebColor:(NSString *)colorCode;
++ (UIColor *)colorForHexString:(NSString *)colorCode;
+- (NSString *)hexString;
 
 // Random color generator
 + (UIColor *)randomColor;
-
-// Comparison to another UIColor, converts both to suitable model/space beforehand
-- (BOOL)isEqualToColor:(UIColor *)color;
 
 @end
