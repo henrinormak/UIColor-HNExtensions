@@ -252,6 +252,19 @@ BlendingBlock BlendingBlockForMode(UIColorBlendingMode blendMode)
 }
 
 #pragma mark -
+#pragma mark Dimming
+
+- (UIColor *)dimmedColor {
+    CGFloat hue;
+    CGFloat brightness;
+    CGFloat saturation;
+    CGFloat alpha;
+    
+    [self getHue:&hue saturation:&saturation brightness:&brightness alpha:&alpha];
+    return [UIColor colorWithHue:hue saturation:0.f brightness:CLAMP(brightness - .3f, 0.f, 1.f) alpha:alpha];
+}
+
+#pragma mark -
 #pragma mark Color palette
 
 - (UIColor *)complementaryColor {    

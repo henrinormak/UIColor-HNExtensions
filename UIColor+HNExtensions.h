@@ -53,6 +53,12 @@
 - (UIColor *)colorWithBrightness:(CGFloat)brightness;
 
 #pragma mark -
+#pragma mark Dimming
+
+// iOS 7 like dimming of a colour
+- (UIColor *)dimmedColor;
+
+#pragma mark -
 #pragma mark Color palette
 
 // Complementary color
