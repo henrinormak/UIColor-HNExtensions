@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "UIColor-HNExtensions"
-  s.version      = "0.1.3"
+  s.version      = "0.1.4"
   s.summary      = "A grab-bag of useful UIColor helpers"
 
   s.description  = <<-DESC
@@ -21,6 +21,6 @@ Pod::Spec.new do |s|
   s.platform     = :ios, '7.0'
 
   s.source       = { :git => "https://github.com/henrinormak/UIColor-HNExtensions.git", :tag => s.version }
-  s.source_files  = 'UIColor+HNExtensions.{h,m}'
+  s.source_files = 'UIColor+HNExtensions.{h,m}'
   s.requires_arc = true
 end

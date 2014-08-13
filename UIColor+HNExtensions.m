@@ -548,6 +548,29 @@ static NSUInteger const ColorAlphaChannel = 3;
                            alpha:1.f];
 }
 
++ (UIColor *)colorForString:(NSString *)string {
+    if ([string length] == 0)
+        return nil;
+    
+    uint8_t hash[CC_SHA1_DIGEST_LENGTH];
+    NSData *data = [string dataUsingEncoding:NSUTF8StringEncoding];
+    CC_SHA1(data.bytes, (CC_LONG)data.length, hash);
+    
+    UIColor *match = nil;
+    NSUInteger offset = 0;
+    while (offset + 3 < CC_SHA1_DIGEST_LENGTH) {
+        unsigned char r = hash[offset++];
+        unsigned char g = hash[offset++];
+        unsigned char b = hash[offset++];
+        
+        UIColor *color = [UIColor colorWithRed:r / 255.f green:g / 255.f blue:b / 255.f alpha:1.f];
+        if (!match || ([color getSaturation] > [match getSaturation] && (r + g + b) < 765.f))
+            match = color;
+    }
+    
+    return match;
+}
+
 - (NSString *)hexString {
     // Grab the components
     CGFloat red, green, blue, alpha;
