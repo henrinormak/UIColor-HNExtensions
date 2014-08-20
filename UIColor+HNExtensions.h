@@ -131,6 +131,6 @@ typedef enum {
 + (UIColor *)randomColor;
 
 // Color from string, uses SHA1 of the string to get a list of colours, then picks the most saturated one
-+ (UIColor *)colorForString:(NSString *)string;
++ (UIColor *)colorForString:(NSString *)string withIdeal:(UIColor *)color;
 
 @end

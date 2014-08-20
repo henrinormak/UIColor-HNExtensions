@@ -548,7 +548,7 @@ static NSUInteger const ColorAlphaChannel = 3;
                            alpha:1.f];
 }
 
-+ (UIColor *)colorForString:(NSString *)string {
++ (UIColor *)colorForString:(NSString *)string withIdeal:(UIColor *)color {
     if ([string length] == 0)
         return nil;
     
@@ -557,6 +557,11 @@ static NSUInteger const ColorAlphaChannel = 3;
     CC_SHA1(data.bytes, (CC_LONG)data.length, hash);
     
     UIColor *match = nil;
+    CGFloat bestSaturationDiff = 1.f;
+    CGFloat bestBrightnessDiff = 1.f;
+    CGFloat idealSaturation = color ? [color getSaturation] : 0.5;
+    CGFloat idealBrightness = color ? [color getBrightness] : 0.5;
+    
     NSUInteger offset = 0;
     while (offset + 3 < CC_SHA1_DIGEST_LENGTH) {
         unsigned char r = hash[offset++];
@@ -564,8 +569,22 @@ static NSUInteger const ColorAlphaChannel = 3;
         unsigned char b = hash[offset++];
         
         UIColor *color = [UIColor colorWithRed:r / 255.f green:g / 255.f blue:b / 255.f alpha:1.f];
-        if (!match || ([color getSaturation] > [match getSaturation] && (r + g + b) < 765.f))
+        if (!match) {
             match = color;
+            continue;
+        }
+        
+        CGFloat saturationDiff = fabsf([color getSaturation] - idealSaturation);
+        if (saturationDiff >= bestSaturationDiff)
+            continue;
+        
+        CGFloat brightnessDiff = fabsf([color getBrightness] - idealBrightness);
+        if (brightnessDiff >= bestBrightnessDiff)
+            continue;
+        
+        match = color;
+        bestBrightnessDiff = brightnessDiff;
+        bestSaturationDiff = saturationDiff;
     }
     
     return match;
