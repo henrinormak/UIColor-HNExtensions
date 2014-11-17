@@ -42,6 +42,8 @@
 - (CGFloat)getSaturation;
 - (CGFloat)getBrightness;
 
+- (CGFloat)getLuminance;
+
 // YES if this colour was likely created by +colorWithPatternImage:
 - (BOOL)isPatternBased;
 
