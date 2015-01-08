@@ -236,10 +236,6 @@ typedef enum {
 #pragma mark -
 #pragma mark Misc
 
-// Method for converting web hex color into a UIColor object, pass in a string similar to "FFFFFF" or "#FFFFFF"
-// If less than six characters long, will be used as a pattern - "FFA" will result in "FFAFFA" and "FFFA" results in "FFFAFF"
-// Does not take alpha into account (i.e alpha is always set to 100%)
-// Additionally works with the constants used by UIColor, such as "yellow" or "orange" or "clear"
 /**
  *  Convert hex string into a UIColor object
  *  If less than six characters long, will be used as a pattern - "FFA" will result in "FFAFFA" and "FFFA" results in "FFFAFF"
